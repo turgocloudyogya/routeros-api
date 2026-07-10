@@ -9,6 +9,25 @@ export function buildCommand(words: string[]): Buffer {
   return Buffer.concat(parts)
 }
 
+export function splitSentences(words: string[]): string[][] {
+  const sentences: string[][] = []
+  let current: string[] = []
+  for (const w of words) {
+    if (w === "") {
+      if (current.length > 0) {
+        sentences.push(current)
+        current = []
+      }
+    } else {
+      current.push(w)
+    }
+  }
+  if (current.length > 0) {
+    sentences.push(current)
+  }
+  return sentences
+}
+
 export function parseResponse(words: string[]): Record<string, string>[] {
   if (!Array.isArray(words) || words.length === 0) {
     return []

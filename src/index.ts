@@ -8,8 +8,21 @@ export {
   AuthenticationError,
   ConnectionError,
   ProtocolError,
+  RetryExhaustedError,
+  AbortError,
 } from "./errors"
 export { encodeWord } from "./encoder"
 export { decodeWord } from "./decoder"
-export { buildCommand, parseResponse } from "./protocol"
-export type { ClientConfig, Task, SendEvent, ReceiveEvent, StatusEvent } from "./types"
+export { buildCommand, parseResponse, splitSentences } from "./protocol"
+export type {
+  ClientConfig,
+  SSLOptions,
+  RetryConfig,
+  HealthCheckConfig,
+  QueryOptions,
+  Task,
+  SendEvent,
+  ReceiveEvent,
+  StatusEvent,
+  PoolStats,
+} from "./types"

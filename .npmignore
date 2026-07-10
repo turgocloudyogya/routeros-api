@@ -1,0 +1,4 @@
+testing/
+mock-server.py
+*.log
+.env

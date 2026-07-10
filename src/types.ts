@@ -1,12 +1,39 @@
+export interface SSLOptions {
+  cert?: string
+  key?: string
+  ca?: string
+  skipVerify?: boolean
+}
+
+export interface RetryConfig {
+  retries: number
+  minDelay: number
+  maxDelay: number
+}
+
+export interface HealthCheckConfig {
+  interval: number
+  timeout?: number
+  command?: string[]
+}
+
 export interface ClientConfig {
   host?: string
   port?: number
-  ssl?: boolean
+  ssl?: boolean | SSLOptions
   username?: string
   password?: string
   timeout?: number
   queryTimeout?: number
   poolSize?: number
+  autoConnect?: boolean
+  idleTimeout?: number
+  retry?: RetryConfig
+  healthCheck?: HealthCheckConfig
+}
+
+export interface QueryOptions {
+  signal?: AbortSignal
 }
 
 export interface Task {
@@ -15,6 +42,13 @@ export interface Task {
   resolve: (value: unknown) => void
   reject: (reason: unknown) => void
   timer?: ReturnType<typeof setTimeout>
+  signal?: AbortSignal
+  stream?: {
+    rows: Record<string, string>[]
+    onRow?: (row: Record<string, string>) => void
+    resolveStream: (rows: Record<string, string>[]) => void
+    rejectStream: (reason: unknown) => void
+  }
 }
 
 export interface SendEvent {
@@ -30,4 +64,14 @@ export interface ReceiveEvent {
 export interface StatusEvent {
   status: string
   error?: string
+}
+
+export interface PoolStats {
+  totalConnections: number
+  activeConnections: number
+  destroyedConnections: number
+  queuedTasks: number
+  totalQueries: number
+  failedQueries: number
+  uptime: number
 }
