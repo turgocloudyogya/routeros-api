@@ -73,11 +73,46 @@ await client.close()
 
 ```typescript
 interface SSLOptions {
-  cert?: string        // Custom client certificate
-  key?: string         // Client certificate key
-  ca?: string          // Custom CA certificate
+  cert?: string        // Custom client certificate (PEM)
+  key?: string         // Client certificate key (PEM)
+  ca?: string          // Custom CA certificate (PEM)
   skipVerify?: boolean // Skip TLS verification (default: true)
 }
+```
+
+```typescript
+// Custom CA cert (self-signed RouterOS cert)
+const client = new Client({
+  host: "192.168.88.1",
+  port: 8729,
+  ssl: {
+    ca: `-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----`,
+    skipVerify: false,
+  },
+  username: "admin",
+  password: "password",
+})
+
+// Client certificate authentication
+const client2 = new Client({
+  host: "192.168.88.1",
+  port: 8729,
+  ssl: {
+    cert: `-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----`,
+    key: `-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----`,
+    ca: `-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----`,
+    skipVerify: false,
+  },
+  username: "admin",
+  password: "password",
+})
+
+// Skip verification (self-signed, default behavior)
+const client3 = new Client({
+  host: "192.168.88.1",
+  port: 8729,
+  ssl: true, // shortcut — same as { skipVerify: true }
+})
 ```
 
 ### RetryConfig
