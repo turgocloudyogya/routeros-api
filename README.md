@@ -37,15 +37,15 @@ import { Client } from "routeros-api"
 
 const client = new Client({
   host: "192.168.88.1",
-  port: 8728,
+  port: 8729,
+  ssl: { skipVerify: true },
   username: "admin",
   password: "your-password",
   timeout: 5000,
   poolSize: 3,
 })
 
-await client.connect()
-
+// autoConnect: true by default — no explicit connect() needed
 const addresses = await client.query(["/ip/address/print"])
 console.log(addresses)
 
