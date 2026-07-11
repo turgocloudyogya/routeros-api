@@ -7,6 +7,7 @@ import {
   AuthenticationError,
   AbortError,
 } from "./errors"
+import { QueryRow } from "./protocol"
 import {
   ClientConfig,
   SSLOptions,
@@ -51,6 +52,7 @@ export class ConnectionPool extends EventEmitter {
       poolSize: Math.max(1, config.poolSize || 3),
       autoConnect: config.autoConnect !== false,
       idleTimeout: config.idleTimeout || 0,
+      autoFormat: config.autoFormat ?? false,
       retry: config.retry || defaultRetry,
       healthCheck: config.healthCheck || undefined as any,
     }
@@ -135,6 +137,7 @@ export class ConnectionPool extends EventEmitter {
       timeout: this.config.timeout,
       queryTimeout: this.config.queryTimeout,
       idleTimeout: this.config.idleTimeout,
+      autoFormat: this.config.autoFormat,
     })
 
     conn.on("send", (event: SendEvent) => this.emit("send", event))
@@ -198,12 +201,12 @@ export class ConnectionPool extends EventEmitter {
 
   async executeStream(
     cmd: string[],
-    opts?: { signal?: AbortSignal; onRow?: (row: Record<string, string>) => void }
-  ): Promise<Record<string, string>[]> {
+    opts?: { signal?: AbortSignal; onRow?: (row: QueryRow) => void }
+  ): Promise<QueryRow[]> {
     await this.ensureReady()
     const conn = this.acquire()
     if (!conn) throw new ConnectionError("No available connections")
-    return conn.executeStream(cmd, opts) as Promise<Record<string, string>[]>
+    return conn.executeStream(cmd, opts)
   }
 
   getStats(): PoolStats {

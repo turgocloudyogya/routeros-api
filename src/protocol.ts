@@ -28,6 +28,36 @@ export function splitSentences(words: string[]): string[][] {
   return sentences
 }
 
+export type QueryValue = string | number | boolean
+export type QueryRow = Record<string, QueryValue>
+
+function isFormattableIP(s: string): boolean {
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2})?$/.test(s)) return true
+  if (/^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/.test(s)) return true
+  if (s.includes(":")) return true
+  return false
+}
+
+export function autoFormatValue(s: string): QueryValue {
+  const lower = s.toLowerCase()
+  if (lower === "true") return true
+  if (lower === "false") return false
+  if (isFormattableIP(s)) return s
+  if (/^-?\d+$/.test(s)) return parseInt(s, 10)
+  if (/^-?\d+\.\d+$/.test(s)) return parseFloat(s)
+  return s
+}
+
+export function formatRows(rows: Record<string, string>[]): QueryRow[] {
+  return rows.map((row) => {
+    const f: QueryRow = {}
+    for (const [k, v] of Object.entries(row)) {
+      f[k] = autoFormatValue(v)
+    }
+    return f
+  })
+}
+
 export function parseResponse(words: string[]): Record<string, string>[] {
   if (!Array.isArray(words) || words.length === 0) {
     return []

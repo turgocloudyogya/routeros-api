@@ -1,6 +1,7 @@
 import { EventEmitter } from "events"
 import { ConnectionPool } from "./pool"
 import { RouterOSAPIError, ConnectionError } from "./errors"
+import { QueryRow } from "./protocol"
 import {
   ClientConfig,
   QueryOptions,
@@ -39,20 +40,20 @@ export class Client {
     await this.pool.init()
   }
 
-  async query(cmd: string[], opts?: QueryOptions): Promise<Record<string, string>[]> {
+  async query(cmd: string[], opts?: QueryOptions): Promise<QueryRow[]> {
     if (this.closed) throw new ConnectionError("Client is closed")
     if (this.autoConnect) {
       await this.pool.init().catch(() => {})
     }
     const result = await this.pool.execute(cmd, opts)
     if (result === undefined || result === null) return []
-    return result as Record<string, string>[]
+    return result as QueryRow[]
   }
 
   async querySafe(
     cmd: string[],
     opts?: QueryOptions
-  ): Promise<{ isError: false; data: Record<string, string>[] } | { isError: true; error: RouterOSAPIError }> {
+  ): Promise<{ isError: false; data: QueryRow[] } | { isError: true; error: RouterOSAPIError }> {
     try {
       const data = await this.query(cmd, opts)
       return { isError: false, data }
@@ -64,8 +65,8 @@ export class Client {
 
   async queryStream(
     cmd: string[],
-    opts?: { signal?: AbortSignal; onRow?: (row: Record<string, string>) => void }
-  ): Promise<Record<string, string>[]> {
+    opts?: { signal?: AbortSignal; onRow?: (row: QueryRow) => void }
+  ): Promise<QueryRow[]> {
     if (this.closed) throw new ConnectionError("Client is closed")
     if (this.autoConnect) {
       await this.pool.init().catch(() => {})
@@ -80,7 +81,7 @@ export class Client {
   on(event: "connect" | "disconnect", callback: (event: StatusEvent) => void): this
   on(event: "send", callback: (event: SendEvent) => void): this
   on(event: "receive", callback: (event: ReceiveEvent) => void): this
-  on(event: "row", callback: (event: { id: string; data: Record<string, string> }) => void): this
+  on(event: "row", callback: (event: { id: string; data: QueryRow }) => void): this
   on(event: "error", callback: (event: { error: string }) => void): this
   on(event: string, callback: (...args: any[]) => void): this {
     this.emitter.on(event, callback)

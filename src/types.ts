@@ -28,6 +28,7 @@ export interface ClientConfig {
   poolSize?: number
   autoConnect?: boolean
   idleTimeout?: number
+  autoFormat?: boolean
   retry?: RetryConfig
   healthCheck?: HealthCheckConfig
 }
@@ -44,9 +45,9 @@ export interface Task {
   timer?: ReturnType<typeof setTimeout>
   signal?: AbortSignal
   stream?: {
-    rows: Record<string, string>[]
-    onRow?: (row: Record<string, string>) => void
-    resolveStream: (rows: Record<string, string>[]) => void
+    rows: Record<string, string | number | boolean>[]
+    onRow?: (row: Record<string, string | number | boolean>) => void
+    resolveStream: (rows: Record<string, string | number | boolean>[]) => void
     rejectStream: (reason: unknown) => void
   }
 }
@@ -58,7 +59,7 @@ export interface SendEvent {
 
 export interface ReceiveEvent {
   id: string
-  data: Record<string, string>[]
+  data: Record<string, string | number | boolean>[]
 }
 
 export interface StatusEvent {

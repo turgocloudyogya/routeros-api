@@ -13,7 +13,8 @@ export {
 } from "./errors"
 export { encodeWord } from "./encoder"
 export { decodeWord } from "./decoder"
-export { buildCommand, parseResponse, splitSentences } from "./protocol"
+export { buildCommand, parseResponse, splitSentences, autoFormatValue, formatRows } from "./protocol"
+export type { QueryValue, QueryRow } from "./protocol"
 export type {
   ClientConfig,
   SSLOptions,

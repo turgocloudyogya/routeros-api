@@ -1,9 +1,11 @@
+import type { QueryValue } from "./protocol"
+
 export class RouterOSAPIError extends Error {
   public id?: string
-  public detail?: Record<string, string>
+  public detail?: Record<string, QueryValue>
   public cause?: Error
 
-  constructor(message: string, options?: { id?: string; detail?: Record<string, string>; cause?: Error }) {
+  constructor(message: string, options?: { id?: string; detail?: Record<string, QueryValue>; cause?: Error }) {
     super(message)
     this.name = "RouterOSAPIError"
     this.id = options?.id
@@ -23,42 +25,42 @@ export class RouterOSAPIError extends Error {
 }
 
 export class TimeoutError extends RouterOSAPIError {
-  constructor(message: string, options?: { id?: string; detail?: Record<string, string>; cause?: Error }) {
+  constructor(message: string, options?: { id?: string; detail?: Record<string, QueryValue>; cause?: Error }) {
     super(message, options)
     this.name = "RouterOSAPITimeoutError"
   }
 }
 
 export class AuthenticationError extends RouterOSAPIError {
-  constructor(message: string, options?: { id?: string; detail?: Record<string, string>; cause?: Error }) {
+  constructor(message: string, options?: { id?: string; detail?: Record<string, QueryValue>; cause?: Error }) {
     super(message, options)
     this.name = "RouterOSAPIAuthenticationError"
   }
 }
 
 export class ConnectionError extends RouterOSAPIError {
-  constructor(message: string, options?: { id?: string; detail?: Record<string, string>; cause?: Error }) {
+  constructor(message: string, options?: { id?: string; detail?: Record<string, QueryValue>; cause?: Error }) {
     super(message, options)
     this.name = "RouterOSAPIConnectionError"
   }
 }
 
 export class ProtocolError extends RouterOSAPIError {
-  constructor(message: string, options?: { id?: string; detail?: Record<string, string>; cause?: Error }) {
+  constructor(message: string, options?: { id?: string; detail?: Record<string, QueryValue>; cause?: Error }) {
     super(message, options)
     this.name = "RouterOSAPIProtocolError"
   }
 }
 
 export class RetryExhaustedError extends RouterOSAPIError {
-  constructor(message: string, options?: { id?: string; detail?: Record<string, string>; cause?: Error }) {
+  constructor(message: string, options?: { id?: string; detail?: Record<string, QueryValue>; cause?: Error }) {
     super(message, options)
     this.name = "RouterOSAPIRetryExhaustedError"
   }
 }
 
 export class AbortError extends RouterOSAPIError {
-  constructor(message: string, options?: { id?: string; detail?: Record<string, string>; cause?: Error }) {
+  constructor(message: string, options?: { id?: string; detail?: Record<string, QueryValue>; cause?: Error }) {
     super(message, options)
     this.name = "RouterOSAPIAbortError"
   }

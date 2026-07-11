@@ -66,6 +66,7 @@ await client.close()
 | `poolSize`     | `number`                | `3`              | Number of connections in the pool        |
 | `autoConnect`  | `boolean`               | `true`           | Auto-connect on first query              |
 | `idleTimeout`  | `number`                | `0`              | Close socket after idle ms (0 = disabled)|
+| `autoFormat`   | `boolean`               | `false`          | Auto-convert "123"→123, "true"→true, etc.|
 | `retry`        | `RetryConfig`           | `{retries:0}`    | Retry with exponential backoff           |
 | `healthCheck`  | `HealthCheckConfig`     | —                | Periodic health check config             |
 
@@ -134,6 +135,17 @@ interface HealthCheckConfig {
   command?: string[] // Custom command (default: ["/system/identity/print"])
 }
 ```
+
+### Auto-Format
+
+When `autoFormat: true`, string values in query results are automatically converted to their appropriate types:
+- `"true"` / `"false"` → boolean `true` / `false`
+- `"123"`, `"0"`, `"-42"` → number `123`, `0`, `-42`
+- `"3.14"`, `"0.5"` → number `3.14`, `0.5`
+- IP addresses, CIDRs, MAC addresses remain strings
+- Everything else remains a string
+
+This affects the return type of `query()`, `querySafe()`, `queryStream()`, and the `"row"` event — they return `QueryRow[]` (`Record<string, string | number | boolean>[]`) instead of `Record<string, string>[]`.
 
 ## API
 

@@ -9,7 +9,7 @@ Install from repo: `npm install git+https://github.com/turgocloudyogya/routeros-
 // TypeScript / ESM
 import { Client, ConnectionPool } from "routeros-api"
 import { RouterOSAPIError, TimeoutError, AuthenticationError, ConnectionError, ProtocolError, RetryExhaustedError, AbortError } from "routeros-api"
-import type { ClientConfig, SSLOptions, RetryConfig, HealthCheckConfig, QueryOptions, PoolStats, SendEvent, ReceiveEvent } from "routeros-api"
+import type { ClientConfig, SSLOptions, RetryConfig, HealthCheckConfig, QueryOptions, PoolStats, SendEvent, ReceiveEvent, QueryValue, QueryRow } from "routeros-api"
 
 // CommonJS
 const { Client, RouterOSAPIError, TimeoutError } = require("routeros-api")
@@ -33,6 +33,7 @@ const client = new Client({
   poolSize: 3,                 // connections in pool, default: 3
   autoConnect: true,           // connect on first query, default: true
   idleTimeout: 0,              // close socket after idle ms, 0 = disabled
+  autoFormat: false,           // auto-convert values: "123"→123, "true"→true, etc.
   retry: {                     // retry on failure (default: { retries: 0 })
     retries: 3,
     minDelay: 1000,
@@ -60,13 +61,36 @@ const client = new Client({
 })
 ```
 
+## Auto-Format (`autoFormat: true`)
+
+When enabled, numeric strings and booleans are auto-converted in query results:
+
+```typescript
+const client = new Client({ autoFormat: true })
+
+const r = await client.query(["/interface/print"])
+// Without autoFormat: r[0].running → "true" (string)
+// With autoFormat:    r[0].running → true (boolean)
+//                    r[0]["mtu"] → 1500 (number)
+```
+
+The return type changes from `Record<string, string>[]` to `QueryRow[]` where:
+
+```typescript
+type QueryValue = string | number | boolean
+type QueryRow = Record<string, QueryValue>
+```
+
+Auto-formatting skips IP addresses, CIDRs, and MAC addresses to preserve their string form. The `autoFormatValue()` and `formatRows()` functions are exported for manual use.
+
 ## Core API Methods
 
 ### `client.query(cmd, opts?)` — throws on error
 
 ```typescript
 const ifaces = await client.query(["/interface/print"])
-// Returns: Array<Record<string, string>>
+// Returns: Array<Record<string, string>>  (autoFormat: false)
+//          QueryRow[]                      (autoFormat: true)
 // Example: [{ ".id": "*1", name: "ether1", type: "ether", running: "true" }]
 
 const identity = await client.query(["/system/identity/print"])
@@ -137,7 +161,7 @@ client.on("connect", (e: StatusEvent) => {})          // pool connected
 client.on("disconnect", (e: StatusEvent) => {})        // pool disconnected
 client.on("send", (e: SendEvent) => {})                // { id, cmd }
 client.on("receive", (e: ReceiveEvent) => {})          // { id, data }
-client.on("row", (e: { id: string, data: Record<string, string> }) => {})
+client.on("row", (e: { id: string, data: QueryRow }) => {})  // QueryRow when autoFormat enabled
 
 client.off("send", myCallback)                         // remove listener
 ```
@@ -263,6 +287,7 @@ interface ClientConfig {
   poolSize?: number                // default 3
   autoConnect?: boolean            // default true
   idleTimeout?: number             // ms, 0 = disabled
+  autoFormat?: boolean             // auto-convert values, default false
   retry?: RetryConfig              // { retries, minDelay, maxDelay }
   healthCheck?: HealthCheckConfig  // { interval, timeout?, command? }
 }
@@ -295,4 +320,8 @@ interface PoolStats {
   failedQueries: number
   uptime: number                   // ms
 }
+
+// autoFormat value types
+type QueryValue = string | number | boolean
+type QueryRow = Record<string, QueryValue>
 ```

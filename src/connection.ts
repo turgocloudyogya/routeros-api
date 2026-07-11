@@ -2,7 +2,7 @@ import * as net from "net"
 import * as tls from "tls"
 import { EventEmitter } from "events"
 import { TaskQueue } from "./queue"
-import { buildCommand, parseResponse, splitSentences } from "./protocol"
+import { buildCommand, parseResponse, splitSentences, formatRows, QueryRow } from "./protocol"
 import { decodeWord } from "./decoder"
 import {
   TimeoutError,
@@ -45,6 +45,7 @@ export class Connection extends EventEmitter {
   private idleTimeout: number
   private idleTimer: ReturnType<typeof setTimeout> | null = null
   private lastActivity: number = 0
+  private autoFormat: boolean
 
   public stats = {
     totalQueries: 0,
@@ -60,6 +61,7 @@ export class Connection extends EventEmitter {
     timeout: number
     queryTimeout: number
     idleTimeout: number
+    autoFormat?: boolean
   }) {
     super()
     this.host = config.host
@@ -70,6 +72,7 @@ export class Connection extends EventEmitter {
     this.timeout = config.timeout
     this.queryTimeout = config.queryTimeout
     this.idleTimeout = config.idleTimeout
+    this.autoFormat = config.autoFormat ?? false
   }
 
   async connect(): Promise<void> {
@@ -194,7 +197,8 @@ export class Connection extends EventEmitter {
     if (!hasDone && !hasTrap) return
 
     this.buffer = Buffer.alloc(0)
-    const parsed = parseResponse(words)
+    const raw = parseResponse(words)
+    const parsed = this.autoFormat ? formatRows(raw) : raw
     const task = this.queue.getPending()
     this.queue.complete()
     this.touch()
@@ -210,14 +214,14 @@ export class Connection extends EventEmitter {
         const isLogin = task.cmd[0] === "/login"
         const ErrClass = isLogin ? AuthenticationError : ProtocolError
         if (task.stream) {
-          task.stream.rejectStream(new ErrClass(message || "RouterOS API error", { id: task.id, detail }))
+          task.stream.rejectStream(new ErrClass(String(message || "RouterOS API error"), { id: task.id, detail }))
         } else {
-          task.reject(new ErrClass(message || "RouterOS API error", { id: task.id, detail }))
+          task.reject(new ErrClass(String(message || "RouterOS API error"), { id: task.id, detail }))
         }
       } else {
         this.stats.totalQueries++
         const result = task.stream ? task.stream.rows : parsed
-        this.emit("receive", { id: task.id, data: result as Record<string, string>[] })
+        this.emit("receive", { id: task.id, data: result as QueryRow[] })
         if (task.stream) {
           task.stream.resolveStream(task.stream.rows)
         } else {
@@ -242,8 +246,9 @@ export class Connection extends EventEmitter {
     for (let i = 0; i < limit; i++) {
       const sentence = sentences[i]
       if (sentence[0] === "!re") {
-        const parsed = parseResponse(sentence)
-        for (const row of parsed) {
+        const raw = parseResponse(sentence)
+        const rows = this.autoFormat ? formatRows(raw) : raw
+        for (const row of rows) {
           task.stream.rows.push(row)
           if (task.stream.onRow) task.stream.onRow(row)
           this.emit("row", { id: task.id, data: row })
@@ -312,8 +317,8 @@ export class Connection extends EventEmitter {
 
   async executeStream(
     cmd: string[],
-    opts?: { signal?: AbortSignal; onRow?: (row: Record<string, string>) => void }
-  ): Promise<Record<string, string>[]> {
+    opts?: { signal?: AbortSignal; onRow?: (row: QueryRow) => void }
+  ): Promise<QueryRow[]> {
     if (!this.connected && !this.destroyed) {
       await this.connect()
     }
