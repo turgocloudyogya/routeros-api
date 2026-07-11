@@ -1,5 +1,5 @@
 {
-  "name": "mikrotik-client",
+  "name": "routeros-api",
   "version": "1.0.1",
   "description": "Mikrotik API client for Node.js with connection pool and queue system",
   "license": "Apache-2.0",
